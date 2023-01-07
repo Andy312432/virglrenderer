@@ -3276,6 +3276,14 @@ int vrend_create_vertex_elements_state(struct vrend_context *ctx,
          glVertexBindingDivisor(i, ve->base.instance_divisor);
          glEnableVertexAttribArray(i);
       }
+   } else {
+      for (i = 0; i < num_elements; i++) {
+         struct vrend_vertex_element *ve = &v->elements[i];
+
+         UPDATE_INT_SIGN_MASK(ve->base.src_format, i,
+                              v->signed_int_bitmask,
+                              v->unsigned_int_bitmask);
+      }
    }
    ret_handle = vrend_renderer_object_insert(ctx, v, handle,
                                              VIRGL_OBJECT_VERTEX_ELEMENTS);
@@ -7097,11 +7105,7 @@ static bool use_integer(void) {
       return true;
 
    const char * a = (const char *) glGetString(GL_VENDOR);
-   if (!a)
-       return false;
-   if (strcmp(a, "ARM") == 0)
-      return true;
-   return false;
+   return a && !(strcmp(a, "ARM") && strcmp(a, "Google Inc. (Apple)"));
 }
 
 int vrend_renderer_init(const struct vrend_if_cbs *cbs, uint32_t flags)
